@@ -35,20 +35,22 @@ char *pathSeparator = "/";
 
 
 void PK11Decrypt(char *cipheredBuffer, char **plaintext) {
-        SECItem *request;
+
+		SECStatus s;
+		SECItem *request;
         SECItem *reply;
         unsigned int len = strlen(cipheredBuffer);
 
         reply = SECITEM_AllocItem(NULL, NULL, 0);
-
         request = NSSBase64_DecodeBuffer(NULL, NULL, cipheredBuffer, len);
-        PK11SDR_Decrypt(request, reply, NULL);
+        s = PK11SDR_Decrypt(request, reply, NULL);
 
-        if(reply->len > 1) {
+        if(s == SECSuccess) {
         	*plaintext = malloc(reply->len + 1);
         	strncpy(*plaintext, reply->data, reply->len);
         	(*plaintext)[reply->len] = '\0';
         }
+
         SECITEM_FreeItem(request, TRUE);
         SECITEM_FreeItem(reply, TRUE);
         return;
@@ -85,7 +87,7 @@ void PK11Encrypt(char *plaintext, char **cipheredBuffer , SECItem *key) {
 
 int get_profile(char* pathProfilesIni, char* profile)
 {
-       dictionary * ini;
+       dictionary *ini;
        ini = iniparser_load(pathProfilesIni);
        if (ini==NULL) {
                fprintf(stderr, "cannot parse file: %s\n", pathProfilesIni);
@@ -97,14 +99,10 @@ int get_profile(char* pathProfilesIni, char* profile)
 
        iniparser_freedict(ini);
 
-//        printf("Found profile2 path: %s\n", profile);
-        return 0;
+       return 0;
 }
 
 _Bool initialize() {
-
-
-
 
 	return true;
 }
@@ -112,8 +110,8 @@ _Bool initialize() {
 void help()
 {
 	fprintf(stderr, "\nFirefox keys encryption/decryption using key database.\n");
-	fprintf(stderr, "This program performs encryption or decryption on the string it receives and outputs the result to standart output.\n\n");
-	fprintf(stderr, "-h path to firefox homedir\n");
+	fprintf(stderr, "This program performs encryption or decryption on the string it receives and outputs the result.\n\n");
+	fprintf(stderr, "-h path to firefox profile directory (where profiles.ini reside)\n");
 	fprintf(stderr, "-d (decrypt)\n");
 	fprintf(stderr, "-e (encrypt)\n");
 	fprintf(stderr, "-s (string to be encrypted/decrypted)\n");
@@ -158,6 +156,7 @@ int main(int argc, char **argv)
 				break;
 			case 's':
 				strLength = strlen(optarg);
+
 				if (!(strKey = (char *) malloc(strLength))) { fprintf(stderr, "out of memory while allocating memory for strKey, peace out!\n"); exit (1); }
 				strncpy(strKey,optarg,strLength);
 				break;
@@ -167,20 +166,25 @@ int main(int argc, char **argv)
 		}
 
 	}
+
+	if(eSecOp == eEncrypt && strLength > 24) { fprintf(stderr, "Your string is too long! (string > 24 chars) \n"); exit (1); }
+
+
 	if(strkeyDB != NULL) {
-		sprintf(pathFirefoxData, "%s/.mozilla/firefox", strkeyDB);
+		//sprintf(pathFirefoxData, "%s/.mozilla/firefox", strkeyDB);
+		sprintf(pathProfilesIni, "%s/profiles.ini", strkeyDB);
+		get_profile(pathProfilesIni, profile);
+		sprintf(pathProfile, "%s%s%s", pathFirefoxData, pathSeparator, profile);
 	}
 	else
 	{
 		sprintf(pathFirefoxData, "%s/.mozilla/firefox", homedir);
-	}
-
-	if(strKey != NULL && eSecOp != eNoOp) {
-
-
 		sprintf(pathProfilesIni, "%s/profiles.ini", pathFirefoxData);
 		get_profile(pathProfilesIni, profile);
 		sprintf(pathProfile, "%s%s%s", pathFirefoxData, pathSeparator, profile);
+	}
+
+	if(strKey != NULL && eSecOp != eNoOp) {
 
 		if(NSS_Init(pathProfile) != SECSuccess) {
 			fprintf(stderr, "NSS_Init fails\r\n");
@@ -197,14 +201,10 @@ int main(int argc, char **argv)
 		if(initialize() == true) {
 
 			if(eSecOp == eDecrypt) {
-
 				 PK11Decrypt(strKey, &strResult);
-
 			}
 			if(eSecOp == eEncrypt) {
-				 //printf("%s", strKey);
-				 PK11Encrypt(strKey, &strResult, (SECItem *) keySlot);
-
+				PK11Encrypt(strKey, &strResult, (SECItem *) keySlot);
 			}
 		}
 	}

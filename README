@@ -1,2 +1,6 @@
 Firefox Decode/Encode Strings
 
+Dependencies:
+
+nss
+nspr

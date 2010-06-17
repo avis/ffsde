@@ -9,3 +9,9 @@ all:
 #	gcc  $(LDFLAGS) -o ff_key3db_dump ff_key3db_dump.o  -lnspr4 -lnss3 -lsqlite3 -liniparser
 #	gcc -o ff_key3db_dump -I/usr/include/nss -I/usr/include/nspr  $(LDFLAGS) ff_key3db_dump.c
 
+clean:
+
+	rm -rf ffsde
+	rm -rf *.o
+	rm -rf ini/*.o
+	rm -rf ini/*.so
