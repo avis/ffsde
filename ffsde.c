@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 		//sprintf(pathFirefoxData, "%s/.mozilla/firefox", strkeyDB);
 		sprintf(pathProfilesIni, "%s/profiles.ini", strkeyDB);
 		get_profile(pathProfilesIni, profile);
-		sprintf(pathProfile, "%s%s%s", pathFirefoxData, pathSeparator, profile);
+		sprintf(pathProfile, "%s%s%s", strkeyDB, pathSeparator, profile);
 	}
 	else
 	{
