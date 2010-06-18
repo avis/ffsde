@@ -34,7 +34,7 @@ typedef enum
 char *pathSeparator = "/";
 
 
-void PK11Decrypt(char *cipheredBuffer, char **plaintext) {
+void PK11Decrypt(char *cipheredBuffer, unsigned char **plaintext) {
 
 		SECStatus s;
 		SECItem *request;
@@ -56,7 +56,7 @@ void PK11Decrypt(char *cipheredBuffer, char **plaintext) {
         return;
 }
 
-void PK11Encrypt(char *plaintext, char **cipheredBuffer , SECItem *key) {
+void PK11Encrypt(char *plaintext, unsigned char **cipheredBuffer , SECItem *key) {
 
 		SECStatus s;
 		SECItem *request;
@@ -74,7 +74,7 @@ void PK11Encrypt(char *plaintext, char **cipheredBuffer , SECItem *key) {
 
         s = PK11SDR_Encrypt(key, request, reply, NULL);
         if(s == SECSuccess) {
-        	*cipheredBuffer = (char *) NSSBase64_EncodeItem(NULL, NULL, 0, reply);
+        	*cipheredBuffer = NSSBase64_EncodeItem(NULL, NULL, 0, reply);
         }
 
         SECITEM_FreeItem(request, TRUE);
@@ -126,7 +126,8 @@ int main(int argc, char **argv)
 	enumSecOp eSecOp = eNoOp;
 	char *strkeyDB = NULL;
 	char *strKey = NULL;
-	char *strResult = NULL;
+	//wchar_t *strResult = NULL;
+	unsigned char *strResult = NULL;
 	char *homedir = getenv("HOME");
 	char pathFirefoxData[MAX_PATH];
 	char pathProfilesIni[MAX_PATH];
@@ -214,11 +215,14 @@ int main(int argc, char **argv)
 	}
 
 	if(strResult != NULL) {
-		/*char *ptr;
-		if((ptr = strchr(strResult, '\x0a')) != NULL) {
-			*ptr = '\0';
-		}*/
+
+		char *ptr;
+
+		if((ptr = strchr(strResult, 10)) != NULL) { *ptr = 7; }
+		if((ptr = strchr(strResult, 13)) != NULL) { *ptr = 7; }
+
 		fprintf(stdout, "%s\n", strResult);
+
 	}
 	else if(strKey != NULL && strResult == NULL) {
 		fprintf(stdout, "Decoder/Encoder failed.\n");

@@ -12,4 +12,5 @@ clean:
 	rm -rf *.o
 	rm -rf ini/*.o
 	rm -rf ini/*.so
+	rm -rf ini/*.a
 	rm -rf gmon.out
